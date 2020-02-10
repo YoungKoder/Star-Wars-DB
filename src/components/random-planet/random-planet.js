@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import SwapiService from "../../services/swapi-service";
 
 import Spinner from "../spinner";
+import ErrorIndicator from "../error-indicator";
 
 import './random-planet.css';
 
@@ -10,15 +11,17 @@ export default class RandomPlanet extends Component {
   swapi = new SwapiService();
   constructor(){
     super();
-
     this.state = {
       planet:{},
       loading: true,
       error:false
     }
-    this.updatePlanet();
   }
 
+  componentDidMount(){
+    this.updatePlanet();
+    this.interval = setInterval (this.updatePlanet, 2500);
+  }
   onPlanetLoaded = (planet)=>{
     this.setState({
       planet,
@@ -34,18 +37,21 @@ export default class RandomPlanet extends Component {
   }
   updatePlanet=()=>{
     const id = Math.floor(Math.random()*25)+2;
+    // const id = 500000000;
     this.swapi.getPlanet(id)
       .then(this.onPlanetLoaded)
-      .catch(this.omError)
+      .catch(this.onError)
   }
   
   render() {
-    const {planet, loading} = this.state;
+    const {planet, loading, error} = this.state;
     
     const spinner = loading ? <Spinner/> : null;
-    const planetContent = !loading ? <PlanetView planet ={planet}/> : null
+    const errorBlock = error ? <ErrorIndicator/> : null;
+    const planetContent = !(loading || error) ? <PlanetView planet ={planet}/> : null
     return (
       <div className="random-planet jumbotron rounded">
+        {errorBlock}  
         {spinner}
         {planetContent}
       </div>
@@ -73,8 +79,8 @@ const PlanetView = ({planet})=>{
               <span>{rotationPeriod}</span>
             </li>
             <li className="list-group-item">
-              <span className="term">{diameter}</span>
-              <span>100</span>
+              <span className="term">Diameter</span>
+              <span>{diameter}</span>
             </li>
           </ul>
         </div> 
